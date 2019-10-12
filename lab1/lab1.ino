@@ -49,9 +49,3 @@ void gradual_turn(int rgb_number1, int rgb_number2, boolean turn_on) {
         }
     }
 }
-
-
-void set_rgb_led(int rgb_number)
-{
-
-}
