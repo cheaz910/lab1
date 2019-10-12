@@ -1,66 +1,57 @@
 #include <Arduino.h>
-#include <MD_TCS230.h>
 
-#define  S0_OUT  2
-#define  S1_OUT  3
-#define  S2_OUT  4
-#define  S3_OUT  5
-
-#define R_OUT 6
-#define G_OUT 7
-#define B_OUT 8
-
-MD_TCS230 colorSensor(S2_OUT, S3_OUT, S0_OUT, S1_OUT);
+#define RGB_COUNT 4
+const byte rgbs[RGB_COUNT][3] = {{22, 23, 24}, 
+                                 {25, 26, 27}, 
+                                 {28, 29, 30}, 
+                                 {31, 32, 33}};
 
 void setup()
 {
     Serial.begin(115200);
     Serial.println("Started!");
 
-    sensorData whiteCalibration;
-    whiteCalibration.value[TCS230_RGB_R] = 0;
-    whiteCalibration.value[TCS230_RGB_G] = 0;
-    whiteCalibration.value[TCS230_RGB_B] = 0;
-
-    sensorData blackCalibration;
-    blackCalibration.value[TCS230_RGB_R] = 0;
-    blackCalibration.value[TCS230_RGB_G] = 0;
-    blackCalibration.value[TCS230_RGB_B] = 0;
-
-    colorSensor.begin();
-    colorSensor.setDarkCal(&blackCalibration);
-    colorSensor.setWhiteCal(&whiteCalibration);
-
-    pinMode(R_OUT, OUTPUT);
-    pinMode(G_OUT, OUTPUT);
-    pinMode(B_OUT, OUTPUT);
+    for (int i = 0; i < RGB_COUNT; i++) 
+    {
+        for (int j = 0; j < 3; j++) 
+        {
+            pinMode(rgbs[i][j], OUTPUT);
+        }
+    }
 }
 
 void loop() 
 {
-    colorData rgb;
-    colorSensor.read();
-
-    while (!colorSensor.available());
-
-    colorSensor.getRGB(&rgb);
-    print_rgb(rgb);
-    set_rgb_led(rgb);
+    int opposite_rgb = RGB_COUNT / 2;
+    for (int i = 0; i < opposite_rgb; i++)
+    {
+        gradual_turn(i, i + opposite_rgb, true);
+        gradual_turn(i, i + opposite_rgb, false);
+    }
 }
 
-void print_rgb(colorData rgb)
-{
-  Serial.print(rgb.value[TCS230_RGB_R]);
-  Serial.print(" ");
-  Serial.print(rgb.value[TCS230_RGB_G]);
-  Serial.print(" ");
-  Serial.print(rgb.value[TCS230_RGB_B]);
-  Serial.println();
+void gradual_turn(int rgb_number1, int rgb_number2, boolean turn_on) {
+    for (int i = 255; i >= 0; i--)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            if (turn_on)
+            {
+                analogWrite(rgbs[rgb_number1][j], i);
+                analogWrite(rgbs[rgb_number2][j], i);
+            }
+            else
+            {
+                analogWrite(rgbs[rgb_number1][j], 255 - i);
+                analogWrite(rgbs[rgb_number2][j], 255 - i);
+            }
+            delay(10);
+        }
+    }
 }
 
-void set_rgb_led(colorData rgb)
+
+void set_rgb_led(int rgb_number)
 {
-    analogWrite(R_OUT, 255 - rgb.value[TCS230_RGB_R]);
-    analogWrite(G_OUT, 255 - rgb.value[TCS230_RGB_G]);
-    analogWrite(B_OUT, 255 - rgb.value[TCS230_RGB_B]);
+
 }
